@@ -1,0 +1,38 @@
+name: Build Varnam Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - test
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up MSYS2 environment
+      run: |
+        choco install msys2 --params '"/NoUpdate /InstallDir:C:\msys64"'
+        echo 'export PATH=$PATH:/c/msys64/usr/bin' >> $GITHUB_ENV
+        echo 'export MSYS2_PATH_TYPE=inherit' >> $GITHUB_ENV
+
+    - name: Display environment variables
+      run: echo $PATH
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+
+    - name: Install cbindgen
+      run: cargo install cbindgen
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Build solution
+      run: msbuild cpp\VarnamWindows.sln
